@@ -19,37 +19,24 @@ io.on('connection', (socket) => {
         }
     })
 
-    socket.on('send-msg', (data) => {
-        chatModel.create({
-            name: data.name,
-            msg: data.message
-        }, (err, savedData) => {
-            if (!err) {
-                io.emit('recieve-msg', savedData)
-            }
-            else {
-                console.log(err);
-            }
-        })
-
-        // socket.broadcast.emit('recieve-msg', data)
-
-        if (data.message === 'hi' || data.message === 'hello' || data.message === 'hola') {
-            chatModel.findOne({ name: 'bot' }, (err, data) => {
-                if (data) {
-                    io.emit('recieve-msg',data)
-                } else {
-                    chatModel.create({
-                        name: 'bot',
-                        msg: 'welcome to my chatapp'
-                    }, (err, data) => {
-                        if (!err) {
-                            io.emit('recieve-msg',data)
-                        }
-                    })
-                }
+    socket.on('send-msg', async (data) => {
+        try {
+            let savedData = await chatModel.create({
+                name: data.name,
+                msg: data.message
             })
+            io.emit('recieve-msg', savedData)
+            if (data.message === 'hi' || data.message === 'hello' || data.message === 'hola') {
+                let data = await chatModel.create({
+                    name: 'bot',
+                    msg: 'welcome to my chatapp'
+                })
+                io.emit('recieve-msg', data)
+            }
+        } catch (error) {
+            console.log(error);
         }
+        // socket.broadcast.emit('recieve-msg', data)
     })
     socket.on('delete-msgs', () => {
         chatModel.deleteMany({}, (err, deletedData) => {
